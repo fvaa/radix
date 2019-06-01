@@ -1,4 +1,3 @@
-import * as isRegexSafe from 'safe-regex2';
 import fastDecode from './decode';
 import Node, { types, HttpMethods, TypeMethod, Handlers, TypeHandler } from './node';
 const NODE_TYPES = types;
@@ -9,16 +8,11 @@ class CustomStatusError extends Error {
   public status: number;
 }
 
-if (!isRegexSafe(FULL_PATH_REGEXP)) {
-  throw new Error('the FULL_PATH_REGEXP is not safe, update this module');
-}
-
 interface RouterArguments {
   defaultRoute?: Function,
   caseSensitive?: boolean,
   ignoreTrailingSlash?: boolean,
   maxParamLength?: number,
-  allowUnsafeRegex?: boolean,
 }
 
 export default class Router {
@@ -27,7 +21,6 @@ export default class Router {
   private caseSensitive: boolean;
   private ignoreTrailingSlash: boolean;
   private maxParamLength: number;
-  private allowUnsafeRegex: boolean;
   private tree: Node;
   private routes: Array<any>;
 
@@ -36,7 +29,6 @@ export default class Router {
     this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive;
     this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false;
     this.maxParamLength = opts.maxParamLength || 100;
-    this.allowUnsafeRegex = opts.allowUnsafeRegex || false;
     this.tree = new Node();
     this.routes = [];
   }
@@ -121,13 +113,6 @@ export default class Router {
 
         let parameter = path.slice(j, i);
         let regex: RegExp | null = isRegex ? new RegExp(parameter.slice(parameter.indexOf('('), i)) : null;
-        if (isRegex) {
-          if (!this.allowUnsafeRegex) {
-            if (!isRegexSafe(regex)) {
-              throw new Error(`The regex '${regex.toString()}' is not safe!`);
-            }
-          }
-        }
         params.push(parameter.slice(0, isRegex ? parameter.indexOf('(') : i));
 
         path = path.slice(0, j) + path.slice(i);

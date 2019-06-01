@@ -2,16 +2,12 @@
   "name": "@fvaa/radix",
   "version": "1.0.0",
   "description": "Page monitor and page behavior operation architecture",
-  "main": "src/index.ts",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/fvaa/radix.git"
   },
   "keywords": [
     "history"
-  ],
-  "files": [
-    "src"
   ],
   "author": "cevio",
   "license": "MIT",
@@ -20,20 +16,27 @@
   },
   "homepage": "https://github.com/fvaa/radix#readme",
   "scripts": {
-    "dev": "webpack-dev-server --open --hot --progress --history-api-fallback"
+    "dev": "webpack-dev-server --open --hot --progress --history-api-fallback",
+    "build": "rollup -c"
   },
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
   "peerDependencies": {
     "@fvaa/monitor": "^1.0.0"
   },
   "devDependencies": {
     "html-webpack-plugin": "^3.2.0",
+    "rollup": "^1.13.1",
+    "rollup-plugin-typescript2": "^0.21.1",
     "ts-loader": "^6.0.1",
-    "typescript": "^3.4.5",
+    "typescript": "^3.5.1",
     "webpack": "^4.32.2",
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.4.1"
   },
-  "dependencies": {
-    "safe-regex2": "^2.0.0"
-  }
+  "dependencies": {}
 }

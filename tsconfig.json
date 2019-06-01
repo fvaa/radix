@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
-    "target": "es6",
-    "allowJs": true,
+    "declaration": true,
+    "declarationDir": "./dist",
+    "module": "es6",
     "noImplicitAny": true,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "module": "esnext"
-  }
+    "outDir": "./dist",
+    "target": "es5"
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": ["node_modules"]
 }
