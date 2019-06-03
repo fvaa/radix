@@ -18,7 +18,7 @@ export default class Router {
     _insert(method: TypeMethod, path: string, kind: number, params: Array<any>, handler: Function, regex?: RegExp): void;
     reset(): void;
     off(method: TypeMethod | Array<TypeMethod>, path: string): any;
-    lookup(req: any, res: any, ctx?: any): any;
+    lookup(req: any, res: any, ctx?: any): Promise<any>;
     _defaultRoute(req: any, res: any, ctx: any): any;
     router(path: string, handler: Function): void;
     get(path: string, handler: Function): void;

@@ -280,12 +280,12 @@ export default class Router {
     newRoutes.forEach(route => self.on(route.method, route.path, route.opts, route.handler));
   }
 
-  lookup(req: any, res: any, ctx?: any) {
+  async lookup(req: any, res: any, ctx?: any) {
     const handle = this.find(req.method.toUpperCase(), sanitizeUrl(req.pathname));
-    if (handle === null) return this._defaultRoute(req, res, ctx)
+    if (handle === null) return await this._defaultRoute(req, res, ctx);
     return ctx === undefined
-      ? handle.handler(req, res, handle.params)
-      : handle.handler.call(ctx, req, res, handle.params)
+      ? await handle.handler(req, res, handle.params)
+      : await handle.handler.call(ctx, req, res, handle.params)
   }
 
   _defaultRoute(req: any, res: any, ctx: any) {
@@ -471,7 +471,7 @@ export default class Router {
         currentNode = node;
         i = 0;
         if (node.regex !== null) {
-          var matchedParameter = path.match(node.regex);
+          let matchedParameter = path.match(node.regex);
           if (matchedParameter === null) return null;
           i = matchedParameter[1].length;
         } else {
@@ -492,8 +492,8 @@ export default class Router {
 }
 
 function sanitizeUrl (url: string) {
-  for (var i = 0, len = url.length; i < len; i++) {
-    var charCode = url.charCodeAt(i)
+  for (let i = 0, len = url.length; i < len; i++) {
+    let charCode = url.charCodeAt(i)
     // Some systems do not follow RFC and separate the path and query
     // string with a `;` character (code 59), e.g. `/foo;jsessionid=123456`.
     // Thus, we need to split on `;` as well as `?` and `#`.
@@ -506,9 +506,9 @@ function sanitizeUrl (url: string) {
 
 function getWildcardNode (node: Node, method: TypeMethod, path: string, len: number) {
   if (node === null) return null
-  var decoded = fastDecode(path.slice(-len))
+  let decoded = fastDecode(path.slice(-len))
   if (decoded === null) return null
-  var handle = node.handlers[method]
+  let handle = node.handlers[method]
   if (handle !== null && handle !== undefined) {
     return {
       handler: handle.handler,
