@@ -1,6 +1,6 @@
 {
   "name": "@fvaa/radix",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Page monitor and page behavior operation architecture",
   "repository": {
     "type": "git",
