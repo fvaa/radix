@@ -55,7 +55,7 @@ export default class Router {
     }
   }
 
-  _on(method: TypeMethod | Array<TypeMethod>, path: string, opts: object | Function, handler: Function) {
+  private _on(method: TypeMethod | Array<TypeMethod>, path: string, opts: object | Function, handler: Function) {
     if (Array.isArray(method)) {
       for (let k = 0; k < method.length; k++) {
         this._on(method[k], path, opts, handler);
@@ -146,7 +146,7 @@ export default class Router {
     this._insert(method, path, 0, params, handler, null);
   }
 
-  _insert(method: TypeMethod, path: string, kind: number, params: Array<any> = [], handler: Function, regex?: RegExp) {
+  private _insert(method: TypeMethod, path: string, kind: number, params: Array<any> = [], handler: Function, regex?: RegExp) {
     const route = path;
     let currentNode = this.tree;
     let prefix = '';
@@ -288,7 +288,7 @@ export default class Router {
       : await handle.handler.call(ctx, req, res, handle.params)
   }
 
-  _defaultRoute(req: any, res: any, ctx: any) {
+  private _defaultRoute(req: any, res: any, ctx: any) {
     if (this.defaultRoute !== null) {
       return ctx === undefined
         ? this.defaultRoute(req, res)

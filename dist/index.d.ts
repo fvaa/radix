@@ -14,12 +14,12 @@ export default class Router {
     private routes;
     constructor(opts?: RouterArguments);
     on(method: TypeMethod | Array<TypeMethod>, path: string, opts: object | Function, handler?: Function): void;
-    _on(method: TypeMethod | Array<TypeMethod>, path: string, opts: object | Function, handler: Function): void;
-    _insert(method: TypeMethod, path: string, kind: number, params: Array<any>, handler: Function, regex?: RegExp): void;
+    private _on;
+    private _insert;
     reset(): void;
     off(method: TypeMethod | Array<TypeMethod>, path: string): any;
     lookup(req: any, res: any, ctx?: any): Promise<any>;
-    _defaultRoute(req: any, res: any, ctx: any): any;
+    private _defaultRoute;
     router(path: string, handler: Function): void;
     get(path: string, handler: Function): void;
     post(path: string, handler: Function): void;
