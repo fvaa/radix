@@ -1,6 +1,6 @@
 {
   "name": "@fvaa/radix",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Page monitor and page behavior operation architecture",
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
   ],
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@fvaa/monitor": "^1.0.9"
+    "@fvaa/monitor": "^1.0.10"
   },
   "devDependencies": {
     "html-webpack-plugin": "^3.2.0",
