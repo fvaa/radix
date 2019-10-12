@@ -1,67 +1,63 @@
+import { Context } from '@fvaa/monitor';
+import { IHandleType } from '.';
 export declare type TypeMethod = 'ROUTER' | 'GET' | 'POST' | 'PUT' | 'DELETE';
 export declare const HttpMethods: Array<TypeMethod>;
-export declare const types: {
-    STATIC: number;
-    PARAM: number;
-    MATCH_ALL: number;
-    REGEX: number;
-    MULTI_PARAM: number;
-};
-export interface TypeHandler {
-    handler: Function;
-    params: Array<any>;
+export declare enum types {
+    STATIC = 0,
+    PARAM = 1,
+    MATCH_ALL = 2,
+    REGEX = 3,
+    MULTI_PARAM = 4
+}
+export interface TypeHandler<T extends Context> {
+    handler: IHandleType<T>;
+    params: string[];
     paramsLength: number;
 }
-interface TypeHandlerMethods {
-    ROUTER?: TypeHandler;
-    GET?: TypeHandler;
-    POST?: TypeHandler;
-    PUT?: TypeHandler;
-    DELETE?: TypeHandler;
+interface TypeHandlerMethods<T extends Context> {
+    ROUTER?: TypeHandler<T>;
+    GET?: TypeHandler<T>;
+    POST?: TypeHandler<T>;
+    PUT?: TypeHandler<T>;
+    DELETE?: TypeHandler<T>;
 }
-interface NodeChildren {
-    [label: string]: Node;
+interface NodeChildren<T extends Context> {
+    [label: string]: Node<T>;
 }
-interface NodeArguments {
+interface NodeArguments<T extends Context> {
     prefix?: string;
-    children?: NodeChildren;
+    children?: NodeChildren<T>;
     kind?: number;
-    handlers?: TypeHandlerMethods;
+    handlers?: TypeHandlerMethods<T>;
     regex?: RegExp | null;
 }
 export declare const Handlers: {
-    new (handlers?: TypeHandlerMethods): {
-        ROUTER: TypeHandler;
-        GET: TypeHandler;
-        POST: TypeHandler;
-        PUT: TypeHandler;
-        DELETE: TypeHandler;
+    new (handlers?: TypeHandlerMethods<Context>): {
+        ROUTER: TypeHandler<Context>;
+        GET: TypeHandler<Context>;
+        POST: TypeHandler<Context>;
+        PUT: TypeHandler<Context>;
+        DELETE: TypeHandler<Context>;
     };
 };
-export default class Node {
+export default class Node<T extends Context> {
     prefix: string;
     label: string;
-    children: NodeChildren;
+    children: NodeChildren<T>;
     numberOfChildren: number;
     kind: number;
     regex: RegExp | null;
-    wildcardChild: Node | null;
-    parametricBrother: Node | null;
-    handlers: TypeHandlerMethods;
-    constructor(options?: NodeArguments);
-    readonly types: {
-        STATIC: number;
-        PARAM: number;
-        MATCH_ALL: number;
-        REGEX: number;
-        MULTI_PARAM: number;
-    };
+    wildcardChild: Node<T> | null;
+    parametricBrother: Node<T> | null;
+    handlers: TypeHandlerMethods<T>;
+    constructor(options?: NodeArguments<T>);
+    readonly types: typeof types;
     getLabel(): string;
-    addChild(node: Node): Node;
-    reset(prefix: string): Node;
-    findByLabel(path: string): Node | undefined;
-    findChild(path: string, method: TypeMethod): Node | null;
-    setHandler(method: TypeMethod, handler: Function, params: Array<any>): void;
-    getHandler(method: TypeMethod): TypeHandler;
+    addChild(node: Node<T>): Node<T>;
+    reset(prefix: string): Node<T>;
+    findByLabel(path: string): Node<T> | undefined;
+    findChild(path: string, method: TypeMethod): Node<T> | null;
+    setHandler(method: TypeMethod, handler: IHandleType<T>, params: string[]): void;
+    getHandler(method: TypeMethod): TypeHandler<T>;
 }
 export {};

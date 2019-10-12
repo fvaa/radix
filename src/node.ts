@@ -1,56 +1,57 @@
-
+import { Context } from '@fvaa/monitor';
+import { IHandleType } from '.';
 export type TypeMethod = 'ROUTER' | 'GET' | 'POST' | 'PUT' | 'DELETE';
 export const HttpMethods: Array<TypeMethod> = ['ROUTER', 'GET', 'POST', 'PUT', 'DELETE'];
 
-export const types = {
-  STATIC: 0,
-  PARAM: 1,
-  MATCH_ALL: 2,
-  REGEX: 3,
+export enum types {
+  STATIC,
+  PARAM,
+  MATCH_ALL,
+  REGEX,
   // It's used for a parameter, that is followed by another parameter in the same part
-  MULTI_PARAM: 4
+  MULTI_PARAM
 }
 
-export interface TypeHandler {
-  handler: Function,
-  params: Array<any>,
+export interface TypeHandler<T extends Context> {
+  handler: IHandleType<T>,
+  params: string[],
   paramsLength: number
 }
 
-interface TypeHandlerMethods {
-  ROUTER?: TypeHandler,
-  GET?: TypeHandler,
-  POST?: TypeHandler,
-  PUT?: TypeHandler,
-  DELETE?: TypeHandler
+interface TypeHandlerMethods<T extends Context> {
+  ROUTER?: TypeHandler<T>,
+  GET?: TypeHandler<T>,
+  POST?: TypeHandler<T>,
+  PUT?: TypeHandler<T>,
+  DELETE?: TypeHandler<T>
 }
 
-interface NodeChildren {
-  [label: string]: Node,
+interface NodeChildren<T extends Context> {
+  [label: string]: Node<T>,
 }
 
-interface NodeArguments {
+interface NodeArguments<T extends Context> {
   prefix?: string,
-  children?: NodeChildren,
+  children?: NodeChildren<T>,
   kind?: number,
-  handlers?: TypeHandlerMethods,
+  handlers?: TypeHandlerMethods<T>,
   regex?: RegExp | null,
 }
 
 export const Handlers = buildHandlers();
 
-export default class Node {
+export default class Node<T extends Context> {
   public prefix: string;
   public label: string;
-  public children: NodeChildren;
+  public children: NodeChildren<T>;
   public numberOfChildren: number;
   public kind: number;
   public regex: RegExp | null;
-  public wildcardChild: Node | null;
-  public parametricBrother: Node | null;
-  public handlers: TypeHandlerMethods;
+  public wildcardChild: Node<T> | null;
+  public parametricBrother: Node<T> | null;
+  public handlers: TypeHandlerMethods<T>;
 
-  constructor(options: NodeArguments = {}) {
+  constructor(options: NodeArguments<T> = {}) {
     this.prefix = options.prefix || '/';
     this.label = this.prefix[0];
     this.children = options.children || {};
@@ -70,7 +71,7 @@ export default class Node {
     return this.prefix[0];
   }
 
-  addChild(node: Node): Node {
+  addChild(node: Node<T>): Node<T> {
     let label: string = '';
 
     switch (node.kind) {
@@ -90,16 +91,16 @@ export default class Node {
     this.numberOfChildren = Object.keys(this.children).length;
 
     const labels: Array<string> = Object.keys(this.children);
-    let parametricBrother: Node | null = this.parametricBrother;
+    let parametricBrother: Node<T> | null = this.parametricBrother;
     for (let i = 0; i < labels.length; i++) {
-      const child: Node = this.children[labels[i]];
+      const child: Node<T> = this.children[labels[i]];
       if (child.label === ':') {
         parametricBrother = child;
         break;
       }
     }
 
-    const iterate = (node: Node | null | undefined) => {
+    const iterate = (node: Node<T> | null | undefined) => {
       if (!node) return;
       if (node.kind !== this.types.STATIC) return;
       if (node !== this) {
@@ -116,7 +117,7 @@ export default class Node {
     return this;
   }
 
-  reset(prefix: string): Node {
+  reset(prefix: string): Node<T> {
     this.prefix = prefix;
     this.children = {};
     this.kind = this.types.STATIC;
@@ -127,12 +128,12 @@ export default class Node {
     return this;
   }
 
-  findByLabel(path: string): Node | undefined {
+  findByLabel(path: string): Node<T> | undefined {
     return this.children[path[0]];
   }
 
-  findChild(path: string, method: TypeMethod): Node | null {
-    let child: Node = this.findByLabel(path);
+  findChild(path: string, method: TypeMethod): Node<T> | null {
+    let child = this.findByLabel(path);
     if (child !== undefined && (child.numberOfChildren > 0 || child.handlers[method] !== null)) {
       if (path.slice(0, child.prefix.length) === child.prefix) return child;
     }
@@ -141,7 +142,7 @@ export default class Node {
     return null;
   }
 
-  setHandler(method: TypeMethod, handler: Function, params: Array<any>) {
+  setHandler(method: TypeMethod, handler: IHandleType<T>, params: string[]) {
     if (!handler) return;
     if (this.handlers[method] === undefined) throw new Error(`There is already an handler with method '${method}'`);
     this.handlers[method] = {
@@ -156,16 +157,16 @@ export default class Node {
   }
 }
 
-function buildHandlers () {
+function buildHandlers<T extends Context> () {
   return class NodeHelper {
 
-    public ROUTER: TypeHandler;
-    public GET: TypeHandler;
-    public POST: TypeHandler;
-    public PUT: TypeHandler;
-    public DELETE: TypeHandler;
+    public ROUTER: TypeHandler<T>;
+    public GET: TypeHandler<T>;
+    public POST: TypeHandler<T>;
+    public PUT: TypeHandler<T>;
+    public DELETE: TypeHandler<T>;
 
-    constructor(handlers?: TypeHandlerMethods) {
+    constructor(handlers?: TypeHandlerMethods<T>) {
       handlers = handlers || {};
       for (let i = 0; i < HttpMethods.length; i++) {
         const m: TypeMethod = HttpMethods[i];

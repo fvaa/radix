@@ -1,6 +1,6 @@
 {
   "name": "@fvaa/radix",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Page monitor and page behavior operation architecture",
   "repository": {
     "type": "git",
@@ -25,17 +25,16 @@
     "dist"
   ],
   "types": "dist/index.d.ts",
-  "peerDependencies": {
-    "@fvaa/monitor": "^1.0.3"
+  "dependencies": {
+    "@fvaa/monitor": "^1.0.7"
   },
   "devDependencies": {
-    "@fvaa/monitor": "^1.0.3",
     "html-webpack-plugin": "^3.2.0",
     "rollup": "^1.23.1",
     "rollup-plugin-typescript2": "^0.21.2",
     "ts-loader": "^6.2.0",
     "typescript": "^3.6.4",
-    "webpack": "^4.41.0",
+    "webpack": "^4.41.1",
     "webpack-cli": "^3.3.9",
     "webpack-dev-server": "^3.8.2"
   }

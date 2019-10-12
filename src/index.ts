@@ -1,30 +1,39 @@
 import fastDecode from './decode';
 import Node, { types, HttpMethods, TypeMethod, Handlers, TypeHandler } from './node';
+import { Context } from '@fvaa/monitor';
 const NODE_TYPES = types;
 const httpMethods = HttpMethods;
 const FULL_PATH_REGEXP = /^https?:\/\/.*\//;
 
-class CustomStatusError extends Error {
+export type IHandleType<T extends Context, U = any> = (ctx: T) => Promise<U>;
+type IRoutesType<T extends Context, U = any> = {
+  method: TypeMethod,
+  path: string,
+  opts: object,
+  handler: IHandleType<T, U>
+}
+
+export class CustomStatusError extends Error {
   public status: number;
 }
 
-interface RouterArguments {
-  defaultRoute?: Function,
+export interface RouterArguments<T extends Context> {
+  defaultRoute?: (ctx: T) => void,
   caseSensitive?: boolean,
   ignoreTrailingSlash?: boolean,
   maxParamLength?: number,
 }
 
-export default class Router {
+export default class Router<T extends Context> {
 
-  private defaultRoute: Function;
+  private defaultRoute: (ctx: T) => void;
   private caseSensitive: boolean;
   private ignoreTrailingSlash: boolean;
   private maxParamLength: number;
-  private tree: Node;
-  private routes: Array<any>;
+  private tree: Node<T>;
+  private routes: IRoutesType<T>[];
 
-  constructor(opts: RouterArguments = {}) {
+  constructor(opts: RouterArguments<T> = {}) {
     this.defaultRoute = opts.defaultRoute || null;
     this.caseSensitive = opts.caseSensitive === undefined ? true : opts.caseSensitive;
     this.ignoreTrailingSlash = opts.ignoreTrailingSlash || false;
@@ -33,9 +42,14 @@ export default class Router {
     this.routes = [];
   }
 
-  on(method: TypeMethod | Array<TypeMethod>, path: string, opts: object | Function, handler?: Function) {
+  on<U = any>(
+    method: TypeMethod | TypeMethod[], 
+    path: string, 
+    opts: object | IHandleType<T, U>, 
+    handler?: IHandleType<T, U>
+  ) {
     if (typeof opts === 'function') {
-      handler = opts;
+      handler = opts as IHandleType<T, U>;
       opts = {};
     }
 
@@ -55,7 +69,12 @@ export default class Router {
     }
   }
 
-  private _on(method: TypeMethod | Array<TypeMethod>, path: string, opts: object | Function, handler: Function) {
+  private _on<U = any>(
+    method: TypeMethod | Array<TypeMethod>, 
+    path: string, 
+    opts: object | IHandleType<T, U>, 
+    handler: IHandleType<T, U>
+  ) {
     if (Array.isArray(method)) {
       for (let k = 0; k < method.length; k++) {
         this._on(method[k], path, opts, handler);
@@ -146,7 +165,7 @@ export default class Router {
     this._insert(method, path, 0, params, handler, null);
   }
 
-  private _insert(method: TypeMethod, path: string, kind: number, params: Array<any> = [], handler: Function, regex?: RegExp) {
+  private _insert<U = any>(method: TypeMethod, path: string, kind: number, params: Array<string> = [], handler: IHandleType<T, U>, regex?: RegExp) {
     const route = path;
     let currentNode = this.tree;
     let prefix = '';
@@ -169,7 +188,7 @@ export default class Router {
       // the longest common prefix is smaller than the current prefix
       // let's split the node and add a new child
       if (len < prefixLen) {
-        node = new Node(
+        node = new Node<T>(
           { prefix: prefix.slice(len),
             children: currentNode.children,
             kind: currentNode.kind,
@@ -194,7 +213,7 @@ export default class Router {
           currentNode.setHandler(method, handler, params);
           currentNode.kind = kind;
         } else {
-          node = new Node({
+          node = new Node<T>({
             prefix: path.slice(len),
             kind: kind,
             handlers: null,
@@ -217,7 +236,7 @@ export default class Router {
           continue;
         }
         // there are not children within the given label, let's create a new one!
-        node = new Node({ prefix: path, kind: kind, handlers: null, regex: regex });
+        node = new Node<T>({ prefix: path, kind: kind, handlers: null, regex: regex });
         node.setHandler(method, handler, params);
 
         currentNode.addChild(node);
@@ -280,19 +299,16 @@ export default class Router {
     newRoutes.forEach(route => self.on(route.method, route.path, route.opts, route.handler));
   }
 
-  async lookup(req: any, res: any, ctx?: any) {
-    const handle = this.find(req.method.toUpperCase(), sanitizeUrl(req.pathname));
-    if (handle === null) return await this._defaultRoute(req, res, ctx);
-    return ctx === undefined
-      ? await handle.handler(req, res, handle.params)
-      : await handle.handler.call(ctx, req, res, handle.params)
+  async lookup(ctx: T) {
+    const handle = this.find(ctx.method.toUpperCase() as TypeMethod, sanitizeUrl(ctx.req.pathname));
+    if (handle === null) return await this._defaultRoute(ctx);
+    Object.assign(ctx.params, handle.params);
+    return await handle.handler(ctx);
   }
 
-  private _defaultRoute(req: any, res: any, ctx: any) {
+  private async _defaultRoute(ctx: T) {
     if (this.defaultRoute !== null) {
-      return ctx === undefined
-        ? this.defaultRoute(req, res)
-        : this.defaultRoute.call(ctx, req, res);
+      return await Promise.resolve(this.defaultRoute(ctx));
     } else {
       const error = new CustomStatusError('Not found');
       error.status = 404;
@@ -300,27 +316,27 @@ export default class Router {
     }
   }
 
-  router(path: string, handler: Function) {
+  router(path: string, handler: (ctx: T) => Promise<void>) {
     return this.on('ROUTER', path, handler);
   }
 
-  get(path: string, handler: Function) {
+  get(path: string, handler: (ctx: T) => Promise<void>) {
     return this.on('GET', path, handler);
   }
 
-  post(path: string, handler: Function) {
+  post(path: string, handler: (ctx: T) => Promise<void>) {
     return this.on('POST', path, handler);
   }
 
-  put(path: string, handler: Function) {
+  put(path: string, handler: (ctx: T) => Promise<void>) {
     return this.on('PUT', path, handler);
   }
 
-  delete(path: string, handler: Function) {
+  delete(path: string, handler: (ctx: T) => Promise<void>) {
     return this.on('DELETE', path, handler);
   }
 
-  all(path: string, handler: Function) {
+  all(path: string, handler: (ctx: T) => Promise<void>) {
     return this.on(httpMethods, path, handler);
   }
 
@@ -342,7 +358,7 @@ export default class Router {
     let pathLenWildcard = 0;
     let decoded = null;
     let pindex = 0;
-    let params: Array<any> = [];
+    let params: Array<string> = [];
     let i = 0;
     let idxInOriginalPath = 0;
 
@@ -357,7 +373,7 @@ export default class Router {
       if (pathLen === 0 || path === prefix) {
         let handle = currentNode.handlers[method];
         if (handle !== null && handle !== undefined) {
-          let paramsObj: { [label: string]: TypeHandler } = {};
+          let paramsObj: { [key: string]: string } = {};
           if (handle.paramsLength > 0) {
             let paramNames = handle.params;
 
@@ -504,7 +520,7 @@ function sanitizeUrl (url: string) {
   return url;
 }
 
-function getWildcardNode (node: Node, method: TypeMethod, path: string, len: number) {
+function getWildcardNode<T extends Context>(node: Node<T>, method: TypeMethod, path: string, len: number) {
   if (node === null) return null
   let decoded = fastDecode(path.slice(-len))
   if (decoded === null) return null

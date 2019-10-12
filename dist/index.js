@@ -171,14 +171,15 @@ function hexCodeToInt(c, shift) {
 }
 
 var HttpMethods = ['ROUTER', 'GET', 'POST', 'PUT', 'DELETE'];
-var types = {
-    STATIC: 0,
-    PARAM: 1,
-    MATCH_ALL: 2,
-    REGEX: 3,
+var types;
+(function (types) {
+    types[types["STATIC"] = 0] = "STATIC";
+    types[types["PARAM"] = 1] = "PARAM";
+    types[types["MATCH_ALL"] = 2] = "MATCH_ALL";
+    types[types["REGEX"] = 3] = "REGEX";
     // It's used for a parameter, that is followed by another parameter in the same part
-    MULTI_PARAM: 4
-};
+    types[types["MULTI_PARAM"] = 4] = "MULTI_PARAM";
+})(types || (types = {}));
 var Handlers = buildHandlers();
 var Node = /** @class */ (function () {
     function Node(options) {
@@ -559,42 +560,40 @@ var Router = /** @class */ (function () {
         self.reset();
         newRoutes.forEach(function (route) { return self.on(route.method, route.path, route.opts, route.handler); });
     };
-    Router.prototype.lookup = function (req, res, ctx) {
+    Router.prototype.lookup = function (ctx) {
         return __awaiter(this, void 0, void 0, function () {
-            var handle, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var handle;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
-                        handle = this.find(req.method.toUpperCase(), sanitizeUrl(req.pathname));
+                        handle = this.find(ctx.method.toUpperCase(), sanitizeUrl(ctx.req.pathname));
                         if (!(handle === null)) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this._defaultRoute(req, res, ctx)];
-                    case 1: return [2 /*return*/, _b.sent()];
+                        return [4 /*yield*/, this._defaultRoute(ctx)];
+                    case 1: return [2 /*return*/, _a.sent()];
                     case 2:
-                        if (!(ctx === undefined)) return [3 /*break*/, 4];
-                        return [4 /*yield*/, handle.handler(req, res, handle.params)];
-                    case 3:
-                        _a = _b.sent();
-                        return [3 /*break*/, 6];
-                    case 4: return [4 /*yield*/, handle.handler.call(ctx, req, res, handle.params)];
-                    case 5:
-                        _a = _b.sent();
-                        _b.label = 6;
-                    case 6: return [2 /*return*/, _a];
+                        Object.assign(ctx.params, handle.params);
+                        return [4 /*yield*/, handle.handler(ctx)];
+                    case 3: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
-    Router.prototype._defaultRoute = function (req, res, ctx) {
-        if (this.defaultRoute !== null) {
-            return ctx === undefined
-                ? this.defaultRoute(req, res)
-                : this.defaultRoute.call(ctx, req, res);
-        }
-        else {
-            var error = new CustomStatusError('Not found');
-            error.status = 404;
-            throw error;
-        }
+    Router.prototype._defaultRoute = function (ctx) {
+        return __awaiter(this, void 0, void 0, function () {
+            var error;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(this.defaultRoute !== null)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, Promise.resolve(this.defaultRoute(ctx))];
+                    case 1: return [2 /*return*/, _a.sent()];
+                    case 2:
+                        error = new CustomStatusError('Not found');
+                        error.status = 404;
+                        throw error;
+                }
+            });
+        });
     };
     Router.prototype.router = function (path, handler) {
         return this.on('ROUTER', path, handler);
@@ -825,4 +824,5 @@ function getClosingParenthensePosition(path, idx) {
     throw new TypeError('Invalid regexp expression in "' + path + '"');
 }
 
+exports.CustomStatusError = CustomStatusError;
 exports.default = Router;
