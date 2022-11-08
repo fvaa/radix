@@ -29,7 +29,7 @@
     "@fvaa/monitor": "^1.0.10"
   },
   "devDependencies": {
-    "html-webpack-plugin": "^3.2.0",
+    "html-webpack-plugin": "^5.5.0",
     "rollup": "^1.23.1",
     "rollup-plugin-typescript2": "^0.21.2",
     "ts-loader": "^6.2.0",
